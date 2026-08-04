@@ -9,15 +9,37 @@ Ville pilote : **Toulouse** (code INSEE 31555).
 
 ## Ce que fait le MVP
 
+- **Vérification d'annonce** (`/api/check-listing`) : l'utilisateur colle
+  l'adresse, la surface et le prix demandé d'une annonce qu'il a trouvée
+  ailleurs (SeLoger, Leboncoin, PAP...), l'outil renvoie un verdict
+  (sous-évalué / prix marché / surcoté) par rapport à l'estimation du modèle.
+  **Aucun accès aux données de ces plateformes n'est requis ni effectué** —
+  voir la note ci-dessous sur pourquoi ce choix est structurel, pas un
+  raccourci temporaire.
 - **Estimation de prix** (`/api/estimate`) : à partir d'une adresse et d'une
   surface, retourne un prix estimé + fourchette, via un modèle de régression
   entraîné sur ~4 200 ventes réelles d'appartements toulousains.
 - **Détection d'opportunités** (`/api/opportunities`) : liste les
   transactions passées dont le prix était significativement inférieur à
-  l'estimation du modèle — démonstration du principe (le produit final
-  comparerait aux annonces en cours, pas à l'historique).
+  l'estimation du modèle — démonstration du principe sur données DVF
+  historiques (pas de portail d'annonces requis).
 - **Rentabilité locative** (`/api/rentability`) : rentabilité brute/nette à
   partir d'un prix d'achat et d'un loyer.
+
+### Pourquoi pas d'intégration directe à SeLoger / Leboncoin / PAP ?
+
+Aucune des trois plateformes ne propose d'API publique gratuite. SeLoger
+(groupe AVIV) ne l'ouvre qu'à des partenaires commerciaux négociés (flux XML,
+5-10k€) ; Leboncoin (même groupe) interdit explicitement le scraping dans ses
+CGU et a fait condamner un scraper à 50 000 € de dommages (arrêt
+Entreparticuliers.com, CA Paris, 2021) ; PAP.fr n'a pas d'API documentée non
+plus. Automatiser la détection d'opportunités sur des annonces actives
+nécessiterait donc soit un partenariat commercial payant (plusieurs milliers
+d'euros), soit un scraping qui expose à un risque juridique réel et
+disproportionné pour un MVP. La vérification manuelle (l'utilisateur saisit
+le prix qu'il a trouvé) atteint le même objectif produit sans ce risque, et
+reste cohérente avec le positionnement "outil d'aide à la décision" qui
+permet d'éviter la loi Hoguet (voir plus bas).
 
 ## Précision du modèle — résultat honnête
 

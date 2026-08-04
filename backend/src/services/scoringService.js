@@ -85,6 +85,48 @@ function averageValue(scoreMap) {
   return values.reduce((s, v) => s + v, 0) / values.length;
 }
 
+// Seuils de verdict — construits autour de la marge d'erreur du modèle
+// (~20% de MAPE) : un écart plus petit que la marge d'erreur elle-même ne
+// permet pas d'affirmer quoi que ce soit avec confiance, donc "prix marché"
+// couvre une zone large centrée sur 0. Au-delà, le signal devient net.
+function computeVerdict(discountPct, marginErrorPct) {
+  const zoneNeutre = marginErrorPct / 2; // ex. 10% si le modèle a 20% de MAPE
+
+  if (discountPct >= zoneNeutre) {
+    return discountPct >= marginErrorPct
+      ? { verdict: 'tres_sous_evalue', label: 'Très sous-évalué', tone: 'good' }
+      : { verdict: 'sous_evalue', label: 'Sous-évalué', tone: 'good' };
+  }
+  if (discountPct <= -zoneNeutre) {
+    return discountPct <= -marginErrorPct
+      ? { verdict: 'tres_surcote', label: 'Très surcoté', tone: 'bad' }
+      : { verdict: 'surcote', label: 'Surcoté', tone: 'bad' };
+  }
+  return { verdict: 'prix_marche', label: 'Dans le prix du marché', tone: 'neutral' };
+}
+
+/**
+ * Vérifie le prix demandé d'une annonce trouvée par l'utilisateur (sur
+ * SeLoger, Leboncoin, PAP...) par rapport à l'estimation du modèle pour un
+ * bien comparable. Ne nécessite aucun accès aux données de ces plateformes —
+ * l'utilisateur saisit lui-même le prix affiché sur l'annonce qu'il consulte.
+ */
+function checkListingPrice({ surface, lat, lon, dpe, periodeConstruction, prixDemande }) {
+  if (!prixDemande || prixDemande <= 0) throw new Error('Prix demandé invalide.');
+
+  const estimate = estimatePrice({ surface, lat, lon, dpe, periodeConstruction });
+
+  const discountPct = ((estimate.prixEstime - prixDemande) / estimate.prixEstime) * 100;
+  const verdict = computeVerdict(discountPct, estimate.margeErreurIndicative);
+
+  return {
+    ...estimate,
+    prixDemande: Math.round(prixDemande),
+    ecartPct: Math.round(discountPct * 10) / 10,
+    ...verdict
+  };
+}
+
 // Au-delà de cette décote, l'écart dépasse largement la marge d'erreur du
 // modèle (~20%) et signale presque toujours une vente atypique (succession,
 // cession familiale, bien sinistré non reflété par le DPE) plutôt qu'une
@@ -178,4 +220,4 @@ function getModelInfo() {
   };
 }
 
-module.exports = { estimatePrice, findHistoricalOpportunities, computeRentability, getModelInfo };
+module.exports = { estimatePrice, checkListingPrice, findHistoricalOpportunities, computeRentability, getModelInfo };

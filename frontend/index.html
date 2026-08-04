@@ -180,6 +180,40 @@
   }
   .error-box.visible { display: block; }
 
+  /* Verdict badges — vérificateur d'annonce */
+  .verdict-box {
+    margin-top: 20px;
+    padding: 20px 22px;
+    border-radius: 12px;
+    display: none;
+    border: 1px solid;
+  }
+  .verdict-box.visible { display: block; }
+  .verdict-box.tone-good     { background: linear-gradient(135deg, rgba(12,163,12,0.10), rgba(27,175,122,0.06)); border-color: rgba(12,163,12,0.3); }
+  .verdict-box.tone-neutral  { background: linear-gradient(135deg, rgba(237,161,0,0.10), rgba(237,161,0,0.04)); border-color: rgba(237,161,0,0.3); }
+  .verdict-box.tone-bad      { background: linear-gradient(135deg, rgba(208,59,59,0.10), rgba(208,59,59,0.05)); border-color: rgba(208,59,59,0.3); }
+
+  .verdict-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: var(--radius-pill);
+    font-weight: 800;
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+  .verdict-badge::before { content: ''; width: 10px; height: 10px; border-radius: 50%; }
+  .tone-good .verdict-badge     { background: rgba(12,163,12,0.16); color: #006300; }
+  .tone-good .verdict-badge::before { background: var(--status-good); }
+  .tone-neutral .verdict-badge  { background: rgba(237,161,0,0.18); color: #7a5c00; }
+  .tone-neutral .verdict-badge::before { background: #eda100; }
+  .tone-bad .verdict-badge      { background: rgba(208,59,59,0.16); color: #a32222; }
+  .tone-bad .verdict-badge::before { background: var(--status-critical); }
+
+  .verdict-detail { font-size: 13.5px; color: var(--text-secondary); margin-bottom: 4px; }
+  .verdict-detail b { color: var(--text-primary); }
+
   table.opp-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
   table.opp-table thead th {
     background: linear-gradient(180deg, #eafaf3, #dcf5e9);
@@ -245,13 +279,72 @@
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" data-tab="estimate">Estimer un bien</button>
+    <button class="tab-btn active" data-tab="check-listing">Vérifier une annonce</button>
+    <button class="tab-btn" data-tab="estimate">Estimer un bien</button>
     <button class="tab-btn" data-tab="opportunities">Opportunités détectées</button>
     <button class="tab-btn" data-tab="rentability">Rentabilité locative</button>
   </div>
 
+  <!-- TAB: CHECK LISTING -->
+  <div class="tab-panel active" id="tab-check-listing">
+    <div class="card">
+      <h2>Vérifier le prix d'une annonce</h2>
+      <p class="card-sub">Vous avez trouvé un bien sur SeLoger, Leboncoin, PAP ou ailleurs ? Collez son adresse, sa surface et le prix demandé pour savoir s'il est sous-évalué, dans le marché, ou surcoté.</p>
+
+      <div class="form-grid">
+        <div class="field" style="grid-column: span 2;">
+          <label for="clAdresse">Adresse du bien</label>
+          <input type="text" id="clAdresse" placeholder="Ex : 15 rue de Metz, Toulouse" value="15 rue de Metz, Toulouse">
+        </div>
+        <div class="field">
+          <label for="clSurface">Surface habitable (m²)</label>
+          <input type="number" id="clSurface" placeholder="Ex : 45" value="45" min="9" max="300">
+        </div>
+        <div class="field">
+          <label for="clPrixDemande">Prix demandé sur l'annonce (€)</label>
+          <input type="number" id="clPrixDemande" placeholder="Ex : 180000" value="180000">
+        </div>
+        <div class="field">
+          <label for="clDpe">Étiquette DPE (si connue)</label>
+          <select id="clDpe">
+            <option value="">Non renseignée</option>
+            <option value="A">A</option><option value="B">B</option><option value="C">C</option>
+            <option value="D" selected>D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="clPeriode">Période de construction (si connue)</label>
+          <select id="clPeriode">
+            <option value="">Non renseignée</option>
+            <option value="avant 1948">Avant 1948</option>
+            <option value="1948-1974">1948-1974</option>
+            <option value="1975-1977">1975-1977</option>
+            <option value="1978-1982">1978-1982</option>
+            <option value="1983-1988">1983-1988</option>
+            <option value="1989-2000">1989-2000</option>
+            <option value="2001-2005">2001-2005</option>
+            <option value="2006-2012">2006-2012</option>
+            <option value="2013-2021">2013-2021</option>
+            <option value="après 2021">Après 2021</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="btnCheckListing">Vérifier ce prix</button>
+
+      <div class="error-box" id="checkListingError"></div>
+
+      <div class="verdict-box" id="checkListingResult">
+        <div class="verdict-badge" id="clVerdictBadge">—</div>
+        <div class="verdict-detail">Prix demandé : <b id="clPrixDemandeOut">—</b> — Estimation du modèle : <b id="clPrixEstimeOut">—</b> (fourchette <span id="clFourchetteOut">—</span>)</div>
+        <div class="verdict-detail">Écart par rapport à l'estimation : <b id="clEcartOut">—</b></div>
+        <div class="verdict-detail" style="margin-top:8px; font-size:12px; color:var(--text-muted);">Adresse résolue : <span id="clAdresseOut">—</span> — Marge d'erreur indicative du modèle : <span id="clMargeOut">—</span></div>
+      </div>
+    </div>
+  </div>
+
   <!-- TAB: ESTIMATE -->
-  <div class="tab-panel active" id="tab-estimate">
+  <div class="tab-panel" id="tab-estimate">
     <div class="card">
       <h2>Estimer le prix d'un appartement</h2>
       <p class="card-sub">Saisissez une adresse à Toulouse et la surface habitable pour obtenir une estimation.</p>

@@ -27,6 +27,68 @@
     }
   }
 
+  // --- Check listing tab ---
+  const btnCheckListing = document.getElementById('btnCheckListing');
+  const checkListingError = document.getElementById('checkListingError');
+  const checkListingResult = document.getElementById('checkListingResult');
+
+  const VERDICT_LABELS = {
+    tres_sous_evalue: '🟢 Très sous-évalué — bonne opportunité potentielle',
+    sous_evalue: '🟢 Sous-évalué',
+    prix_marche: '🟡 Dans le prix du marché',
+    surcote: '🔴 Surcoté',
+    tres_surcote: '🔴 Très surcoté — prix élevé par rapport au marché'
+  };
+
+  btnCheckListing.addEventListener('click', async () => {
+    checkListingError.classList.remove('visible');
+    checkListingResult.classList.remove('visible');
+
+    const adresse = document.getElementById('clAdresse').value.trim();
+    const surface = parseFloat(document.getElementById('clSurface').value);
+    const prixDemande = parseFloat(document.getElementById('clPrixDemande').value);
+    const dpe = document.getElementById('clDpe').value;
+    const periodeConstruction = document.getElementById('clPeriode').value;
+
+    if (!adresse) { showError(checkListingError, 'Veuillez saisir une adresse.'); return; }
+    if (!surface || surface <= 0) { showError(checkListingError, 'Veuillez saisir une surface valide.'); return; }
+    if (!prixDemande || prixDemande <= 0) { showError(checkListingError, 'Veuillez saisir le prix demandé sur l\'annonce.'); return; }
+
+    btnCheckListing.disabled = true;
+    btnCheckListing.textContent = 'Vérification en cours…';
+
+    try {
+      const res = await fetch(`${API_BASE}/api/check-listing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adresse, surface, prixDemande,
+          dpe: dpe || undefined,
+          periodeConstruction: periodeConstruction || undefined
+        })
+      });
+      const data = await res.json();
+
+      if (!res.ok) { showError(checkListingError, data.error || 'Erreur inconnue.'); return; }
+
+      const c = data.check;
+      checkListingResult.className = `verdict-box visible tone-${c.tone}`;
+      document.getElementById('clVerdictBadge').textContent = VERDICT_LABELS[c.verdict] || c.label;
+      document.getElementById('clPrixDemandeOut').textContent = fmtEUR(c.prixDemande);
+      document.getElementById('clPrixEstimeOut').textContent = fmtEUR(c.prixEstime);
+      document.getElementById('clFourchetteOut').textContent = `${fmtEUR(c.fourchetteBasse)} – ${fmtEUR(c.fourchetteHaute)}`;
+      const ecartLabel = c.ecartPct >= 0 ? `${c.ecartPct}% moins cher que l'estimation` : `${Math.abs(c.ecartPct)}% plus cher que l'estimation`;
+      document.getElementById('clEcartOut').textContent = ecartLabel;
+      document.getElementById('clAdresseOut').textContent = data.adresseResolue.label;
+      document.getElementById('clMargeOut').textContent = fmtPct(c.margeErreurIndicative);
+    } catch (err) {
+      showError(checkListingError, 'Impossible de contacter le serveur.');
+    } finally {
+      btnCheckListing.disabled = false;
+      btnCheckListing.textContent = 'Vérifier ce prix';
+    }
+  });
+
   // --- Estimate tab ---
   const btnEstimate = document.getElementById('btnEstimate');
   const estimateError = document.getElementById('estimateError');
