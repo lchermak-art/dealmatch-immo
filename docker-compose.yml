@@ -1,0 +1,15 @@
+services:
+  dealmatch-immo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    volumes:
+      # Monte les données locales (générées par `npm run ingest` / `npm run train`
+      # hors conteneur) — évite d'avoir à relancer l'ingestion à chaque build.
+      - ./backend/data:/app/data
+    environment:
+      - PORT=4000
+      - PILOT_CITY_CODE_INSEE=31555
+      - PILOT_CITY_NAME=Toulouse

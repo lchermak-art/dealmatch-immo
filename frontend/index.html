@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DealMatch Immo — Estimation & opportunités locatives</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page-plane:     #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --success:        #006300;
+
+    --series-1: #2a78d6; /* blue */
+    --series-2: #eb6834; /* orange */
+    --series-3: #1baf7a; /* aqua */
+    --series-4: #eda100; /* yellow */
+    --series-7: #4a3aa7; /* violet */
+    --series-8: #e34948; /* red */
+
+    --status-good: #0ca30c;
+    --status-critical: #d03b3b;
+
+    --radius-card: 14px;
+    --radius-pill: 999px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background:
+      radial-gradient(1100px 420px at 12% -10%, rgba(27,175,122,0.10), transparent 60%),
+      radial-gradient(900px 380px at 100% 0%, rgba(42,120,214,0.09), transparent 55%),
+      var(--page-plane);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app { max-width: 1280px; margin: 0 auto; padding: 0 24px 60px; }
+
+  header.top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin: 0 -24px 24px;
+    padding: 26px 24px;
+    flex-wrap: wrap;
+    background: linear-gradient(120deg, #0f7d58 0%, #1baf7a 45%, #2a78d6 100%);
+    box-shadow: 0 8px 24px -12px rgba(15,125,88,0.5);
+  }
+  header.top h1 { font-size: 22px; font-weight: 700; margin: 0 0 4px; color: #fff; }
+  header.top .subtitle { font-size: 13px; color: rgba(255,255,255,0.85); margin: 0; }
+  header.top .badge {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.28);
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+  }
+
+  .disclaimer {
+    background: #fff8e6;
+    border: 1px solid #f0d78c;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #7a5c00;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--gridline);
+  }
+  .tab-btn {
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 10px 18px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+  }
+  .tab-btn.active { color: #0f7d58; border-bottom-color: var(--series-3); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: 22px 24px;
+    box-shadow: 0 2px 10px -6px rgba(11,11,11,0.16);
+    margin-bottom: 18px;
+  }
+  .card h2 { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
+  .card .card-sub { font-size: 12.5px; color: var(--text-muted); margin: 0 0 18px; }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .field label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+  }
+  .field input, .field select {
+    width: 100%;
+    font-family: inherit;
+    font-size: 13.5px;
+    padding: 9px 11px;
+    border-radius: 8px;
+    border: 1px solid var(--baseline);
+    background: var(--surface-1);
+  }
+  .field input:focus, .field select:focus { outline: 2px solid var(--series-3); outline-offset: 1px; }
+
+  .btn-primary {
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 700;
+    padding: 11px 22px;
+    border-radius: var(--radius-pill);
+    border: none;
+    background: linear-gradient(120deg, #1baf7a, #2a78d6);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 3px 10px -4px rgba(27,175,122,0.55);
+  }
+  .btn-primary:hover { filter: brightness(1.06); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .result-box {
+    margin-top: 20px;
+    padding: 18px 20px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(27,175,122,0.08), rgba(42,120,214,0.06));
+    border: 1px solid rgba(27,175,122,0.25);
+    display: none;
+  }
+  .result-box.visible { display: block; }
+  .result-box .price-hero { font-size: 32px; font-weight: 800; color: #0f7d58; letter-spacing: -0.02em; }
+  .result-box .price-range { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+  .result-meta { display: flex; gap: 24px; margin-top: 14px; flex-wrap: wrap; }
+  .result-meta .item { font-size: 12px; color: var(--text-secondary); }
+  .result-meta .item b { display: block; font-size: 14px; color: var(--text-primary); }
+
+  .error-box {
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: rgba(208,59,59,0.08);
+    border: 1px solid rgba(208,59,59,0.3);
+    color: #a32222;
+    font-size: 13px;
+    display: none;
+  }
+  .error-box.visible { display: block; }
+
+  table.opp-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.opp-table thead th {
+    background: linear-gradient(180deg, #eafaf3, #dcf5e9);
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #0f7d58;
+    font-weight: 700;
+    border-bottom: 2px solid var(--series-3);
+  }
+  table.opp-table tbody td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--gridline);
+  }
+  table.opp-table tbody tr:hover { background: rgba(27,175,122,0.05); }
+  .discount-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+    font-size: 11.5px;
+    background: rgba(12,163,12,0.14);
+    color: #006300;
+  }
+  .dpe-tag {
+    display: inline-block;
+    width: 22px; height: 22px; line-height: 22px;
+    text-align: center;
+    border-radius: 5px;
+    font-weight: 800;
+    font-size: 11.5px;
+    color: #fff;
+  }
+  .dpe-A { background: #0ca30c; } .dpe-B { background: #4caf20; } .dpe-C { background: #9bbf1f; }
+  .dpe-D { background: #eda100; } .dpe-E { background: #eb6834; } .dpe-F { background: #d0592b; } .dpe-G { background: #d03b3b; }
+
+  .filter-row { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+
+  .loading { text-align: center; padding: 30px; color: var(--text-muted); font-size: 13px; }
+
+  footer.notes {
+    margin-top: 10px;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div>
+      <h1>DealMatch Immo</h1>
+      <p class="subtitle">Estimation de prix, détection d'écarts et rentabilité locative — sur données publiques DVF+ &amp; DPE</p>
+    </div>
+    <span class="badge" id="cityBadge">Chargement…</span>
+  </header>
+
+  <div class="disclaimer">
+    <strong>MVP de démonstration.</strong> Estimations calculées par un modèle statistique entraîné sur les transactions publiques (DVF+/Cerema) et les diagnostics de performance énergétique (ADEME). DealMatch Immo est un outil d'aide à la décision — il ne réalise aucune intermédiation, négociation ni transaction immobilière.
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="estimate">Estimer un bien</button>
+    <button class="tab-btn" data-tab="opportunities">Opportunités détectées</button>
+    <button class="tab-btn" data-tab="rentability">Rentabilité locative</button>
+  </div>
+
+  <!-- TAB: ESTIMATE -->
+  <div class="tab-panel active" id="tab-estimate">
+    <div class="card">
+      <h2>Estimer le prix d'un appartement</h2>
+      <p class="card-sub">Saisissez une adresse à Toulouse et la surface habitable pour obtenir une estimation.</p>
+
+      <div class="form-grid">
+        <div class="field" style="grid-column: span 2;">
+          <label for="inpAdresse">Adresse</label>
+          <input type="text" id="inpAdresse" placeholder="Ex : 15 rue de Metz, Toulouse" value="15 rue de Metz, Toulouse">
+        </div>
+        <div class="field">
+          <label for="inpSurface">Surface habitable (m²)</label>
+          <input type="number" id="inpSurface" placeholder="Ex : 45" value="45" min="9" max="300">
+        </div>
+        <div class="field">
+          <label for="inpDpe">Étiquette DPE (optionnel)</label>
+          <select id="inpDpe">
+            <option value="">Non renseignée</option>
+            <option value="A">A</option><option value="B">B</option><option value="C">C</option>
+            <option value="D" selected>D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="inpPeriode">Période de construction (optionnel)</label>
+          <select id="inpPeriode">
+            <option value="">Non renseignée</option>
+            <option value="avant 1948">Avant 1948</option>
+            <option value="1948-1974">1948-1974</option>
+            <option value="1975-1977">1975-1977</option>
+            <option value="1978-1982">1978-1982</option>
+            <option value="1983-1988">1983-1988</option>
+            <option value="1989-2000">1989-2000</option>
+            <option value="2001-2005">2001-2005</option>
+            <option value="2006-2012">2006-2012</option>
+            <option value="2013-2021">2013-2021</option>
+            <option value="après 2021">Après 2021</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="btnEstimate">Estimer le prix</button>
+
+      <div class="error-box" id="estimateError"></div>
+
+      <div class="result-box" id="estimateResult">
+        <div class="price-hero" id="resPrice">—</div>
+        <div class="price-range" id="resRange">—</div>
+        <div class="result-meta">
+          <div class="item"><b id="resPrixM2">—</b>Prix / m²</div>
+          <div class="item"><b id="resMarge">—</b>Marge d'erreur indicative</div>
+          <div class="item"><b id="resDistCenter">—</b>Distance centre-ville</div>
+          <div class="item"><b id="resAdresse">—</b>Adresse résolue</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: OPPORTUNITIES -->
+  <div class="tab-panel" id="tab-opportunities">
+    <div class="card">
+      <h2>Biens historiquement sous-évalués</h2>
+      <p class="card-sub">Transactions passées dont le prix de vente était significativement inférieur à l'estimation du modèle pour un bien comparable — sert à illustrer le principe de détection d'écarts (le produit final comparerait aux annonces en cours, pas à l'historique DVF).</p>
+
+      <div class="filter-row">
+        <label style="font-size:12.5px; color:var(--text-secondary);">Décote minimale :</label>
+        <select id="filterDiscount">
+          <option value="10">≥ 10%</option>
+          <option value="15" selected>≥ 15%</option>
+          <option value="20">≥ 20%</option>
+          <option value="25">≥ 25%</option>
+        </select>
+        <button class="btn-primary" id="btnRefreshOpp" style="padding:8px 16px; font-size:12.5px;">Actualiser</button>
+      </div>
+
+      <div id="oppContainer"><div class="loading">Chargement des opportunités…</div></div>
+    </div>
+  </div>
+
+  <!-- TAB: RENTABILITY -->
+  <div class="tab-panel" id="tab-rentability">
+    <div class="card">
+      <h2>Calculateur de rentabilité locative</h2>
+      <p class="card-sub">Rentabilité brute et nette à partir d'un prix d'achat et d'un loyer mensuel estimé.</p>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="inpPrixAchat">Prix d'achat (€)</label>
+          <input type="number" id="inpPrixAchat" placeholder="Ex : 150000" value="150000">
+        </div>
+        <div class="field">
+          <label for="inpLoyer">Loyer mensuel (€)</label>
+          <input type="number" id="inpLoyer" placeholder="Ex : 650" value="650">
+        </div>
+        <div class="field">
+          <label for="inpCharges">Charges annuelles (€)</label>
+          <input type="number" id="inpCharges" placeholder="Ex : 1200" value="1200">
+        </div>
+        <div class="field">
+          <label for="inpTaxeFonciere">Taxe foncière annuelle (€)</label>
+          <input type="number" id="inpTaxeFonciere" placeholder="Ex : 900" value="900">
+        </div>
+      </div>
+
+      <button class="btn-primary" id="btnRentability">Calculer</button>
+
+      <div class="error-box" id="rentabilityError"></div>
+
+      <div class="result-box" id="rentabilityResult">
+        <div class="result-meta">
+          <div class="item"><b id="resRentabiliteBrute">—</b>Rentabilité brute</div>
+          <div class="item"><b id="resRentabiliteNette">—</b>Rentabilité nette</div>
+          <div class="item"><b id="resLoyerAnnuel">—</b>Loyer annuel</div>
+          <div class="item"><b id="resRevenuNet">—</b>Revenu net annuel</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="notes">
+    Sources : DVF+ open-data (Cerema), DPE Logements existants (ADEME), API Adresse (Base Adresse Nationale). Modèle de régression log-linéaire (surface, DPE, période de construction, localisation).
+  </footer>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

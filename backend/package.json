@@ -1,0 +1,17 @@
+{
+  "name": "dealmatch-immo-backend",
+  "version": "0.1.0",
+  "description": "DealMatch Immo — MVP backend (scoring immobilier basé sur DVF+ et DPE, sans intermédiation)",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node --use-system-ca src/server.js",
+    "ingest": "node --use-system-ca src/scripts/ingest.js",
+    "train": "node src/scripts/train.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}
